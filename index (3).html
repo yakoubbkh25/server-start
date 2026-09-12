@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Minecraft Server Control</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    background: #1e1e2e;
+    color: #eee;
+    max-width: 480px;
+    margin: 60px auto;
+    text-align: center;
+  }
+  h1 { font-size: 1.4rem; }
+  #stateBadge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    margin: 12px 0 24px;
+  }
+  .running { background: #2e7d32; }
+  .offline { background: #555; }
+  .starting, .stopping { background: #f9a825; color: black; }
+  button {
+    padding: 14px 28px;
+    margin: 8px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  #startBtn { background: #4caf50; color: white; }
+  #stopBtn { background: #e53935; color: white; }
+  #log {
+    margin-top: 24px;
+    font-size: 0.85rem;
+    color: #aaa;
+  }
+</style>
+</head>
+<body>
+  <h1>Minecraft Server Control</h1>
+  <div id="stateBadge" class="offline">checking...</div>
+  <div>
+    <button id="startBtn">Start Server</button>
+    <button id="stopBtn">Stop Server</button>
+  </div>
+  <div id="log"></div>
+
+<script>
+const badge = document.getElementById('stateBadge');
+const logEl = document.getElementById('log');
+
+document.getElementById('startBtn').onclick = async () => {
+  logEl.textContent = 'Sending start signal...';
+  const res = await fetch('/start', { method: 'POST' });
+  const data = await res.json();
+  logEl.textContent = data.message;
+};
+
+document.getElementById('stopBtn').onclick = async () => {
+  logEl.textContent = 'Sending stop signal...';
+  const res = await fetch('/stop', { method: 'POST' });
+  const data = await res.json();
+  logEl.textContent = data.message;
+};
+
+async function poll() {
+  try {
+    const res = await fetch('/status');
+    const data = await res.json();
+    if (data.ok) {
+      badge.textContent = data.state;
+      badge.className = data.state;
+    } else {
+      badge.textContent = 'error';
+      logEl.textContent = data.message;
+    }
+  } catch (e) {
+    badge.textContent = 'error';
+  }
+}
+setInterval(poll, 5000);
+poll();
+</script>
+</body>
+</html>
